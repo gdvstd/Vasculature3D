@@ -8,15 +8,18 @@ from tqdm import tqdm
 from PIL import Image
 import numpy as np
 import random
+import itertools
 
 class PatchDataset(Dataset):
-    def __init__(self, image_list, patch_size=(32, 32, 32), stride=(16, 16, 16), labels=[0, 1], resize_factor=1, augmentation=False):
+    def __init__(self, image_list, patch_size=(32, 32, 32), stride=(16, 16, 16), labels=[0, 1], random_crop=False, resize_factor=1, augmentation=False):
         self.image_list = image_list
         self.patch_size = np.asarray(patch_size)
+        self.randomized = random_crop
         self.stride = np.asarray(stride)
         self.labels = labels
         self.resize_factor = resize_factor
         self.augmentation = augmentation
+        self.patch_indices = []
         self.data = self.load_data()
     
     def _load_data(self, image_dir, label_dir, image_ext='.tif', label_ext='.tif'):
@@ -41,16 +44,40 @@ class PatchDataset(Dataset):
     def load_data(self):
         """ prepare array of 3D images """
         data = []
-        for image_path, label_path in tqdm(self.image_list, desc="Processing images"):
+        for i, (image_path, label_path) in enumerate(tqdm(self.image_list, desc="Processing images")):
             image_3d, label_3d = [], []
 
             for img, lbl in zip(self._load_data(image_path, label_path)[0], self._load_data(image_path, label_path)[1]):
                 image_3d.append(self._preprocess_image(img))
                 label_3d.append(self._preprocess_mask(lbl))
 
-            data.append({'image': np.array(image_3d), 'label': np.array(label_3d)})
+            image = np.array(image_3d)
+            label = np.array(label_3d)
+            data.append({'image': image, 'label': label})
+            indices_list = self.get_patch_indices(image.shape, self.patch_size, self.stride)
+            self.patch_indices += ([(i, patch_index) for patch_index in indices_list])
 
         return data
+    
+    def get_patch_indices(self, image_shape, patch_size, stride):
+        """ make list of patch indicies """
+        indices_list = []
+        
+        max_indices = [image_shape[dim] - patch_size[dim] for dim in range(3)]
+        if self.randomized:
+            num_patchs = (1 + max_indices[0]//stride[0]) * (1 + max_indices[1]//stride[1]) * (1 + max_indices[2]//patch_size[2])
+            for i in range(num_patchs):
+                start_indices = [random.randint(0, max_indices[dim]) for dim in range(3)]
+                indices_list.append(start_indices)
+        else:
+            for d_start_index, h_start_index, w_start_index in \
+                itertools.product(list(range(0, max_indices[0], stride[0])), 
+                                  list(range(0, max_indices[1], stride[1])),
+                                  list(range(0, max_indices[2], stride[2]))):
+                start_indices = [d_start_index, h_start_index, w_start_index]
+                indices_list.append(start_indices)    
+                
+        return indices_list
 
     def _preprocess_image(self, image_path):
         image = np.array(Image.open(image_path))
@@ -67,17 +94,17 @@ class PatchDataset(Dataset):
         return mask
 
     def __len__(self):
-        return len(self.data)
+        return len(self.patch_indices)
 
     def __getitem__(self, idx):
         X = torch.zeros((1, *self.patch_size), dtype=torch.float32)
         Y = torch.zeros((*self.patch_size, len(self.labels)), dtype=torch.int16)
 
-        selected_image = self.data[idx]
+        data_index, patch_index = self.patch_indices[idx]
+        selected_image = self.data[data_index]
         image_data, label_data = selected_image['image'], selected_image['label']
-        start_indices, end_indices = self.get_patch_indices(image_data.shape, self.patch_size, self.stride)
-        image_patch = self.extract_patch(image_data, start_indices, end_indices)
-        label_patch = self.extract_patch(label_data, start_indices, end_indices)
+        image_patch = self.extract_patch(image_data, patch_index)
+        label_patch = self.extract_patch(label_data, patch_index)
 
         image_patch = self.normalize_mean_std(image_patch)
         image = torch.tensor(image_patch, dtype=torch.float32)
@@ -100,16 +127,11 @@ class PatchDataset(Dataset):
         tmp = (tmp - tmp_mean) / tmp_std
         return tmp
 
-    def get_patch_indices(self, image_shape, patch_size, stride):
-        """ randomly extract (image_shape) patch indicies """
-        max_indices = [image_shape[dim] - patch_size[dim] for dim in range(3)]
-        start_indices = [random.randint(0, max_indices[dim]) for dim in range(3)]
-        end_indices = [start_indices[dim] + patch_size[dim] for dim in range(3)]
-        return start_indices, end_indices
-
-    def extract_patch(self, data, start_indices, end_indices):
+    def extract_patch(self, data, start_indices):
         """ extract patch of data given indices """
-        return data[start_indices[0]:end_indices[0], start_indices[1]:end_indices[1], start_indices[2]:end_indices[2]]
+        return data[start_indices[0]:start_indices[0] + self.patch_size[0], \
+                    start_indices[1]:start_indices[1] + self.patch_size[1], \
+                    start_indices[2]:start_indices[2] + self.patch_size[2]]
 
     def multi_class_labels(self, data):
         n_labels = len(self.labels)

@@ -13,7 +13,7 @@
 .vscode-server/
 .wget-hsts
 __pycache__/
-log/
+logs/
 runs/
 save/
 
