@@ -8,6 +8,7 @@
 .kaggle/
 .local/
 .profile
+.viminfo
 .python_history
 .vessl/
 .vscode-server/
