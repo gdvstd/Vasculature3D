@@ -1,0 +1,1 @@
+nohup python main.py -n 64input_16Batch -b 16 -p 64 -sf 200 &> ./logs/64input_16batch.log

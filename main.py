@@ -21,18 +21,19 @@ def train(args):
         ("/dataset/train/kidney_3_sparse/images", "/dataset/train/kidney_3_dense/labels")
     ]
 
-    patch_size = (64, 64, 64)
+    patch_size = (args.patch_size, args.patch_size, args.patch_size)
+    stride = (args.patch_size, args.patch_size, args.patch_size)
+    random_crop = True
 
     # Create an instance of your dataset
-    dataset = PatchDataset(image_list, patch_size=patch_size)
+    dataset = PatchDataset(image_list, patch_size=patch_size, stride=stride, random_crop=random_crop)
 
     # Create DataLoader for batching
-    batch_size = 4
+    batch_size = args.batch_size
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
     # Instantiate your UNet3D model
     model = UNet3D(in_channels=1, out_channels=len(dataset.labels))
-    
     if args.continue_path:
         model.load_state_dict(args.continue_path)
 
@@ -60,21 +61,24 @@ def train(args):
             
             writer.add_scalar('loss', loss.item(), batch_idx)
             print('loss:', loss.item())
-            batch_idx += 1
 
-    # Save your model, if needed
-    checkpoint = {
-        'batch_idx': batch_idx, 
-        'model': model.state_dict(),
-        'optimizer': optimizer.state_dict()
-    }
-    torch.save(checkpoint, f'./save/unet3d_{args.name}.pth')
+            if batch_idx % args.save_frequency == 0:
+                checkpoint = {
+                    'batch_idx': batch_idx, 
+                    'model': model.state_dict(),
+                    'optimizer': optimizer.state_dict()
+                }
+                torch.save(checkpoint, f'./save/unet3d_{args.name}_{batch_idx}.pth')
+            batch_idx += 1
 
 def parse_args():
     parser = ArgumentParser()
     
     parser.add_argument('-n', '--name', type=str, help='experiment name')
     parser.add_argument('-c', '--continue_path', default=None, help='path of model checkpoint to continue training')
+    parser.add_argument('-b', '--batch_size', type=int, default=4, help='batch size')
+    parser.add_argument('-p', '--patch_size', type=int, help='patch size')
+    parser.add_argument('-sf', '--save_frequency', type=int, required=True, help='saving step frequency')
     
     return  parser.parse_args()
     
