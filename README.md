@@ -9,7 +9,7 @@ vessl 사용할 경우 pytorch 22.12 image로 workspace deploy 하면 됩니다.
 - Mac OS Sonoma 14.2
 - python 3.8+
 
-이제 내 프로젝트 폴더에 repository를 git clone합니다. 원본 repository를 clone하면 push시 충돌이 발생할 수 있으므로 Fork 후 clone할 것을 권장합니다.
+이제 프로젝트 폴더에 repository를 git clone합니다. ***원본 repository를 clone하면 push시 충돌이 발생할 수 있으므로 Fork 후 clone할 것을 강력히 권장합니다.***
 ```
 git clone
 cd Vasculature3D
@@ -60,7 +60,12 @@ top은 running process에 대한 정보를 동적으로 보여줍니다.
 top
 ```
 
-위 방법으로 running process에 대한 정보를 얻을 수 있습니다. 
+위 방법으로 running process를 확인한 후 python으로 실행된 process의 Process ID(PID)를 지정해 kill 해줍니다.
+강제종료하지 않으면 해제되지 않은 메모리가 남을 수 있으므로 강제종료해야합니다.
+
+```
+kill -9 [PID]
+```
 
 
 
