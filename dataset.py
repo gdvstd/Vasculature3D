@@ -16,10 +16,10 @@ class PatchDataset(Dataset):
         self.patch_size = np.asarray(patch_size)
         self.randomized = random_crop
         self.stride = np.asarray(stride)
+        self.split = split
         self.labels = labels
         self.resize_factor = resize_factor
         self.augmentation = augmentation
-        self.split = split
         self.seed = seed
         self.data, self.patch_indices = self.load_data()
         

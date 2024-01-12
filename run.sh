@@ -10,11 +10,11 @@ if [ ! -d "$LOG_DIR" ]; then
 fi
 
 # 바뀌는 config
-BATCH=16
+BATCH=8
 PATCH=64
 SAVE_FREQUENCY=200
 
-EXPERIMENT="test"
+EXPERIMENT="64_8batch"
 LOG_FILE="./logs/$EXPERIMENT.txt"
 
 echo "Batch: $BATCH" > $LOG_FILE
