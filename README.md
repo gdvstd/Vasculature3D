@@ -6,7 +6,6 @@
 
 vessl 사용할 경우 pytorch 22.12 image로 workspace deploy 하면 됩니다.
 
-- Mac OS
 - python 3.8+
 
 이제 프로젝트 폴더에 repository를 git clone합니다. ***원본 repository를 clone하면 push시 충돌이 발생할 수 있으므로 Fork 후 clone할 것을 강력히 권장합니다.***
