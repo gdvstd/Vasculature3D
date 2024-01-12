@@ -6,7 +6,7 @@
 
 vessl 사용할 경우 pytorch 22.12 image로 workspace deploy 하면 됩니다.
 
-- Mac OS Sonoma 14.2
+- Mac OS
 - python 3.8+
 
 이제 프로젝트 폴더에 repository를 git clone합니다. ***원본 repository를 clone하면 push시 충돌이 발생할 수 있으므로 Fork 후 clone할 것을 강력히 권장합니다.***
@@ -34,13 +34,19 @@ CUDA_VISIBLE_DEVICES 환경변수로 프로세스를 올릴 GPU를 지정합니�
 여러 DEVICE를 사용하면 동시에 여러 실험을 돌릴 수 있습니다.
 
 ```sh
-# authorize shell script
-chmod +x run.sh
 # run on gpu index 0
-CUDA_VISIBLE_DEVICES=0 ./run.sh
+CUDA_VISIBLE_DEVICES=0 sh run.sh
 ```
 
 ### how to kill process 
+
+kill_python script를 이용해 run 중인 python process를 확인하고 지정하여 정지할 수 있습니다.
+
+```sh
+sh kill_python.sh
+```
+
+#### Manual Method
 
 run.sh 스크립트는 백그라운드에서 돌아가도록 설정되어 있으므로 (nohup) 실험을 멈추려면 프로세스를 직접 정지해줘야 합니다.
 
