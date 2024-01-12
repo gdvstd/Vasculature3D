@@ -24,21 +24,28 @@ def train(args):
     patch_size = (args.patch_size, args.patch_size, args.patch_size)
     stride = (args.patch_size, args.patch_size, args.patch_size)
     random_crop = True
+    seed = 42
 
     # Create an instance of your dataset
-    dataset = PatchDataset(image_list, patch_size=patch_size, stride=stride, random_crop=random_crop)
+    print("load train dataset")
+    train_dataset = PatchDataset(image_list, split='train', seed=seed, patch_size=patch_size, stride=stride, random_crop=random_crop)
+    print("load validation dataset")
+    val_dataset = PatchDataset(image_list, split='test', seed=seed, patch_size=patch_size, stride=stride, random_crop=random_crop)
 
     # Create DataLoader for batching
     batch_size = args.batch_size
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
     # Instantiate your UNet3D model
-    model = UNet3D(in_channels=1, out_channels=len(dataset.labels))
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = UNet3D(in_channels=1, out_channels=len(train_dataset.labels))
     if args.continue_path:
         model.load_state_dict(args.continue_path)
+    model = model.to(device)
 
     # Define your loss function and optimizer
-    criterion = nn.BCELoss()
+    criterion = nn.BCELoss().to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
     # Training loop
@@ -46,11 +53,12 @@ def train(args):
     batch_idx=0
     print("train start!")
     for epoch in range(epochs):
-        for batch in tqdm(dataloader):
-            inputs, targets = batch
+        model.train()
+        for batch in tqdm(train_loader):
+            inputs = batch[0].to(device)
+            targets = batch[1].to(device)
             
-            outputs = model(inputs)
-            outputs = outputs.transpose(1, 4)
+            outputs = model(inputs).transpose(1, 4)
             
             loss = criterion(outputs, targets)
             

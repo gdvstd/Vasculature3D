@@ -9,6 +9,7 @@
 .local/
 .profile
 .viminfo
+.DS_Store
 .python_history
 .vessl/
 .vscode-server/

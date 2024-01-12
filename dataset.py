@@ -11,7 +11,7 @@ import random
 import itertools
 
 class PatchDataset(Dataset):
-    def __init__(self, image_list, patch_size=(32, 32, 32), stride=(16, 16, 16), labels=[0, 1], random_crop=False, resize_factor=1, augmentation=False):
+    def __init__(self, image_list, split, seed, patch_size=(32, 32, 32), stride=(16, 16, 16), labels=[0, 1], random_crop=False, resize_factor=1, augmentation=False, train_test_split=0.2):
         self.image_list = image_list
         self.patch_size = np.asarray(patch_size)
         self.randomized = random_crop
@@ -19,8 +19,17 @@ class PatchDataset(Dataset):
         self.labels = labels
         self.resize_factor = resize_factor
         self.augmentation = augmentation
-        self.patch_indices = []
-        self.data = self.load_data()
+        self.split = split
+        self.seed = seed
+        self.data, self.patch_indices = self.load_data()
+        
+        if self.split == 'train':
+            self.num_samples = int((1 - train_test_split) * len(self.patch_indices))
+        elif self.split == 'test':
+            self.num_samples = int(train_test_split * len(self.patch_indices))
+        
+        random.seed(self.seed)
+        self.patch_indices = random.sample(self.patch_indices, self.num_samples)
     
     def _load_data(self, image_dir, label_dir, image_ext='.tif', label_ext='.tif'):
         """ Load and pair images and labels from directories. """
@@ -43,7 +52,11 @@ class PatchDataset(Dataset):
 
     def load_data(self):
         """ prepare array of 3D images """
+        random.seed(self.seed)
+        
         data = []
+        patch_indices = []
+        
         for i, (image_path, label_path) in enumerate(tqdm(self.image_list, desc="Processing images")):
             image_3d, label_3d = [], []
 
@@ -55,9 +68,9 @@ class PatchDataset(Dataset):
             label = np.array(label_3d)
             data.append({'image': image, 'label': label})
             indices_list = self.get_patch_indices(image.shape, self.patch_size, self.stride)
-            self.patch_indices += ([(i, patch_index) for patch_index in indices_list])
+            patch_indices += ([(i, patch_index) for patch_index in indices_list])
 
-        return data
+        return data, patch_indices
     
     def get_patch_indices(self, image_shape, patch_size, stride):
         """ make list of patch indicies """
@@ -94,7 +107,7 @@ class PatchDataset(Dataset):
         return mask
 
     def __len__(self):
-        return len(self.patch_indices)
+        return self.num_samples
 
     def __getitem__(self, idx):
         X = torch.zeros((1, *self.patch_size), dtype=torch.float32)
