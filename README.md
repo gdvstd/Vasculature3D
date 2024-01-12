@@ -18,19 +18,17 @@ cd Vasculature3D
 
 vessl에서 Vasculature3D dataset을 다운로드합니다.
 
-root 디렉토리는 용량 제한이 있으므로 top directory에 다운로드 해야합니다.
+root 디렉토리는 용량 제한이 있으므로 top directory에 다운로드 해야합니다. 아래 명령어는 백그라운드에서 다운로드 프로세스가 돌게 해줍니다.
 
 ```sh
-vessl dataset download Vasculature3D / /
+nohup vessl dataset download Vasculature3D / / &> download.log &
 ```
 
 ### How to run
 
-run.sh 에 실험할 조건을 작성해 실행할 수 있습니다.
+run.sh 에 실험할 조건을 작성해 실행할 수 있습니다. CUDA_VISIBLE_DEVICES 환경변수로 프로세스를 올릴 GPU를 지정합니다.
 
-CUDA_VISIBLE_DEVICES 환경변수로 프로세스를 올릴 GPU를 지정합니다.
-
-여러 DEVICE를 사용하면 동시에 여러 실험을 돌릴 수 있습니다.
+여러 DEVICE를 사용하면서 동시에 몇가지 실험을 돌릴 수 있습니다.
 
 ```sh
 # run on gpu index 0
