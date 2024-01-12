@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -27,9 +28,9 @@ def train(args):
     seed = 42
 
     # Create an instance of your dataset
-    print("load train dataset")
+    print("load train dataset", end='')
     train_dataset = PatchDataset(image_list, split='train', seed=seed, patch_size=patch_size, stride=stride, random_crop=random_crop)
-    print("load validation dataset")
+    print("load validation dataset", end='')
     val_dataset = PatchDataset(image_list, split='test', seed=seed, patch_size=patch_size, stride=stride, random_crop=random_crop)
 
     # Create DataLoader for batching
