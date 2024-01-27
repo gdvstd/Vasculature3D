@@ -5,3 +5,4 @@ opencv-fixer==0.2.5
 segmentation-models-pytorch
 smp
 certifi
+numpy

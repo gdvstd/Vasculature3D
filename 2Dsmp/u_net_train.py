@@ -378,7 +378,7 @@ for epoch in range(CFG.epochs):
     
     best_thr_val_score = 0
     best_thr = 0
-    for thr in range(0.1, 1, 0.1):
+    for thr in np.arange(0.1, 1, 0.1):
         print(f"Threshold: {thr}")
         model.eval()
         time=tqdm(range(len(val_dataset)))
