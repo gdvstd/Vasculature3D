@@ -26,9 +26,15 @@ nohup vessl dataset download Vasculature3D / / > download.log 2>&1 &
 
 ### How to run
 
+아래 명령어를 통해 현재 GPU에 가용한 용량을 확인할 수 있습니다. 
+
+```sh
+nvidia-smi
+```
+
 run.sh 에 실험할 조건을 작성해 실행할 수 있습니다. CUDA_VISIBLE_DEVICES 환경변수로 프로세스를 올릴 GPU를 지정합니다.
 
-여러 DEVICE를 사용하면서 동시에 몇가지 실험을 돌릴 수 있습니다.
+여러 GPU를 사용하면서 동시에 몇가지 실험을 돌릴 수 있습니다.
 
 ```sh
 # run on gpu index 0
