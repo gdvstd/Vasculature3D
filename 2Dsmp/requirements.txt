@@ -1,6 +1,6 @@
 kaggle
 albumentations
-opencv-python --upgrade
+opencv-python
 opencv-fixer==0.2.5
 segmentation-models-pytorch
 smp
